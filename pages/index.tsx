@@ -9,6 +9,8 @@ import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import Typography from '@mui/material/Typography'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Checkbox from '@mui/material/Checkbox'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
@@ -36,6 +38,7 @@ export default function Page() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [config, setConfig] = useState('')
+  const [encodeB64, toggleEncodeB64] = useState(false)
 
   const [configDialogIsOpen, toggleConfigDialog] = useState(false)
 
@@ -65,7 +68,7 @@ export default function Page() {
       return
     }
     const auth = base64.encode(`${email}:${password}`)
-    setConfig(`{
+    let configString = `{
   "auths": {
       "${url}": {
           "auth": "${auth}",
@@ -73,10 +76,16 @@ export default function Page() {
           "password": "${password}",
       }
   }
-}`)
+}`
+
+    if(encodeB64) {
+      configString = base64.encode(configString)
+    }
+
+    setConfig(configString)
 
     toggleConfigDialog(true)
-  }, [url, email, password])
+  }, [url, email, password, encodeB64])
 
   return (
     <>
@@ -148,6 +157,10 @@ export default function Page() {
                 value={password}
                 onChange={event => setPassword(event.target.value)}
               />
+              <FormControlLabel
+                control={<Checkbox value="remember" color="primary" checked={encodeB64} onChange={event => toggleEncodeB64(event.target.checked)}/>}
+                label="Encode content with Base64"
+              />
               <Button
                 type="submit"
                 fullWidth
@@ -169,6 +182,8 @@ export default function Page() {
       </Grid>
 
       <Dialog
+        fullWidth={true}
+        maxWidth="md"
         open={configDialogIsOpen}
         TransitionComponent={SlideUpTransition}
         keepMounted
