@@ -54,7 +54,9 @@ self.addEventListener("install", event => {
 self.addEventListener("fetch", event => {
   // console.log('[TRY] ' + event.request.url)
   event.respondWith(
-    fetch(event.request, { credentials: "include" })
+    fetch(event.request, { 
+      // credentials: "include" 
+    })
       .then(response => {
         // console.log('[SUCCESS] ' + event.request.url)
         if (!response || response.status !== 200 || response.type !== "basic") {
