@@ -9,8 +9,9 @@ build:
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
-      - ./node_modules/
+      - ./node_modules
       - ./.yarn
+      - ./.next/cache
   artifacts:
     paths:
       - .build/
