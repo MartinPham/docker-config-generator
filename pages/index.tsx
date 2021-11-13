@@ -169,6 +169,8 @@ export default function Page() {
       </Grid>
 
       <Dialog
+        fullWidth={true}
+        maxWidth="md"
         open={configDialogIsOpen}
         TransitionComponent={SlideUpTransition}
         keepMounted
