@@ -1,5 +1,8 @@
 name: Deploy to Pages
 
+env:
+  ASSET_PREFIX: '/docker-config-generator/'
+  
 on:
   push:
     branches: [ main, develop ]
@@ -39,6 +42,7 @@ jobs:
         git config --global user.name $GITHUB_ACTOR
         git config --global user.email $GITHUB_ACTOR@users.noreply.github.com
         export NEXT_TELEMETRY_DISABLED=1
+
         ./.ci/release.sh
         
     - name: Upload artifact
