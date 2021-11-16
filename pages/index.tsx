@@ -103,7 +103,7 @@ export default function Page() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: 'registry(https://source.unsplash.com/featured/?password)',
+            backgroundImage: 'url(https://source.unsplash.com/featured/?password)',
             backgroundRepeat: 'no-repeat',
             backgroundColor: (t) =>
               t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
