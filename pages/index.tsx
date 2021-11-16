@@ -23,6 +23,9 @@ import copy from 'copy-to-clipboard'
 import base64 from 'base-64'
 import FileCopyIcon from '@mui/icons-material/FileCopy'
 import { useSnackbar } from 'notistack'
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete'
+import { registries } from 'config/registries'
+import { Registry } from 'types/Registry'
 
 const SlideUpTransition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -33,8 +36,11 @@ const SlideUpTransition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />
 })
 
+const filter = createFilterOptions<Registry>()
+
+
 export default function Page() {
-  const [url, setUrl] = useState('')
+  const [registry, setRegistry] = useState<Registry | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [config, setConfig] = useState('')
@@ -61,7 +67,7 @@ export default function Page() {
   }, [config])
 
   const generateDockerConfig = useCallback(() => {
-    if(email.trim() === '' || password.trim() === '' || url.trim() === '') {
+    if (email.trim() === '' || password.trim() === '' || (registry !== null && registry.url.trim() === '')) {
       enqueueSnackbar('Missing fields', {
         variant: 'error'
       })
@@ -70,7 +76,7 @@ export default function Page() {
     const auth = base64.encode(`${email}:${password}`)
     let configString = `{
   "auths": {
-      "${url}": {
+      "${registry !== null && registry.url}": {
           "auth": "${auth}",
           "email": "${email}",
           "password": "${password}",
@@ -78,14 +84,14 @@ export default function Page() {
   }
 }`
 
-    if(encodeB64) {
+    if (encodeB64) {
       configString = base64.encode(configString)
     }
 
     setConfig(configString)
 
     toggleConfigDialog(true)
-  }, [url, email, password, encodeB64])
+  }, [registry, email, password, encodeB64])
 
   return (
     <>
@@ -97,7 +103,7 @@ export default function Page() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: 'url(https://source.unsplash.com/featured/?password)',
+            backgroundImage: 'registry(https://source.unsplash.com/featured/?password)',
             backgroundRepeat: 'no-repeat',
             backgroundColor: (t) =>
               t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
@@ -122,17 +128,72 @@ export default function Page() {
               Generate Docker config
             </Typography>
             <Box component="div" sx={{ mt: 1 }}>
-              <TextField
+              {/* <TextField
                 margin="normal"
                 required
                 fullWidth
-                id="url"
-                label="Docker registry URL"
-                name="url"
-                autoComplete="url"
+                id="registry"
+                label="Docker registry"
+                name="registry"
+                autoComplete="registry"
                 autoFocus
-                value={url}
-                onChange={event => setUrl(event.target.value)}
+                value={registry}
+                onChange={event => setRegistry(event.target.value)}
+              /> */}
+              <Autocomplete
+                value={registry}
+                onChange={(_, newValue) => {
+                  if (typeof newValue === 'string') {
+                    setRegistry({
+                      url: newValue,
+                    });
+                  } else if (newValue && newValue.url) {
+                    // Create a new value from the user input
+                    setRegistry({
+                      url: newValue.url,
+                    });
+                  } else {
+                    setRegistry(newValue);
+                  }
+                }}
+                filterOptions={(options, params) => {
+                  const filtered = filter(options, params);
+
+                  const { inputValue } = params;
+                  // Suggest the creation of a new value
+                  const isExisting = options.some((option) => inputValue === option.name);
+                  if (inputValue !== '' && !isExisting) {
+                    filtered.push({
+                      url: inputValue,
+                      name: `Use "${inputValue}"`,
+                    });
+                  }
+
+                  return filtered;
+                }}
+                selectOnFocus
+                clearOnBlur
+                handleHomeEndKeys
+                id="registry"
+                options={registries}
+                getOptionLabel={(option) => {
+                  // Value selected with enter, right from the input
+                  if (typeof option === 'string') {
+                    return option;
+                  }
+                  // Add "xxx" option created dynamically
+                  if (option.url) {
+                    return option.url;
+                  }
+                  // Regular option
+                  return option.name || '';
+                }}
+                renderOption={(props, option) => <li {...props}>{option.name}</li>}
+                
+                freeSolo
+                renderInput={(params) => (
+                  <TextField {...params} label="Docker registry *" />
+                )}
               />
               <TextField
                 margin="normal"
@@ -158,7 +219,7 @@ export default function Page() {
                 onChange={event => setPassword(event.target.value)}
               />
               <FormControlLabel
-                control={<Checkbox value="remember" color="primary" checked={encodeB64} onChange={event => toggleEncodeB64(event.target.checked)}/>}
+                control={<Checkbox value="remember" color="primary" checked={encodeB64} onChange={event => toggleEncodeB64(event.target.checked)} />}
                 label="Encode content with Base64"
               />
               <Button
@@ -199,7 +260,7 @@ export default function Page() {
             position: 'absolute',
             top: 18,
             right: 10
-          }}><FileCopyIcon/></Button>
+          }}><FileCopyIcon /></Button>
           <SyntaxHighlighter language="json" style={vs2015}>
             {config}
           </SyntaxHighlighter>
